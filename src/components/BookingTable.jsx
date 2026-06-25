@@ -1,19 +1,18 @@
 import React from 'react';
 
-export default function BookingTable({ bookings, activeFilter, onFilterChange }) {
+export default function BookingTable({ bookings, activeFilter, onFilterChange, onStatusChange }) {
   const categories = ['All', 'Confirmed', 'Pending', 'Cancelled'];
 
-  // Status badge styling helper mapping text parameters to Tailwind classes
   const getStatusStyles = (status) => {
     switch (status.toLowerCase()) {
       case 'confirmed':
-        return 'bg-green-50 text-green-700 border-green-100';
+        return 'bg-green-50 text-green-700 border-green-200 focus:ring-green-400';
       case 'pending':
-        return 'bg-amber-50 text-amber-700 border-amber-100';
+        return 'bg-amber-50 text-amber-700 border-amber-200 focus:ring-amber-400';
       case 'cancelled':
-        return 'bg-gray-100 text-gray-600 border-gray-200';
+        return 'bg-gray-100 text-gray-600 border-gray-200 focus:ring-gray-400';
       default:
-        return 'bg-gray-50 text-gray-600 border-gray-100';
+        return 'bg-gray-50 text-gray-600 border-gray-200';
     }
   };
 
@@ -36,13 +35,12 @@ export default function BookingTable({ bookings, activeFilter, onFilterChange })
         ))}
       </div>
 
-      {/* Bookings View Wrapper */}
+      {/* Bookings Table Block */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-5 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900">Bookings</h2>
         </div>
 
-        {/* Dynamic Empty State Condition */}
         {bookings.length === 0 ? (
           <div className="p-12 text-center border-2 border-dashed border-gray-100 m-4 rounded-xl">
             <span className="text-3xl">🔍</span>
@@ -52,7 +50,6 @@ export default function BookingTable({ bookings, activeFilter, onFilterChange })
             </p>
           </div>
         ) : (
-          /* Table Layout matches ChatGPT Image Jun 25, 2026, 10_40_21 AM.png layout exactly */
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -66,37 +63,57 @@ export default function BookingTable({ bookings, activeFilter, onFilterChange })
               <tbody className="divide-y divide-gray-50 text-sm text-gray-700">
                 {bookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-gray-50/50 transition-colors">
-                    {/* Client Info Column */}
+                    
+                    {/* Client Info Cell with Real Email State */}
                     <td className="py-4 px-6 font-medium text-gray-900">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">
-                          {booking.clientName.split(' ').map(n => n[0]).join('')}
+                          {booking.clientName ? booking.clientName.split(' ').map(n => n[0]).join('') : '??'}
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900">{booking.clientName}</p>
                           <p className="text-xs text-gray-400 font-normal">
-                            {booking.clientName.toLowerCase().replace(' ', '.')}@example.com
+                            {/* Renders the saved email, or runs a lowercase generator for baseline records */}
+                            {booking.clientEmail || `${booking.clientName.toLowerCase().replace(' ', '.')}@example.com`}
                           </p>
                         </div>
                       </div>
                     </td>
 
-                    {/* Session Details Column */}
+                    {/* Session Type */}
                     <td className="py-4 px-6 text-gray-600">
                       {booking.sessionType}
                     </td>
 
-                    {/* Date Column */}
+                    {/* Formatted Date Cell (DD-MM-YYYY) */}
                     <td className="py-4 px-6 text-gray-500 font-mono">
-                      {booking.date}
+                      {(() => {
+                        if (!booking.date) return '';
+                        const [year, month, day] = booking.date.split('-');
+                        return `${day}-${month}-${year}`;
+                      })()}
                     </td>
 
-                    {/* Visual Status Badge Column */}
+                    {/* Interactive Dropdown Badge with Chevron indicator */}
                     <td className="py-4 px-6">
-                      <span className={`px-2.5 py-1 rounded-md text-xs font-medium border uppercase tracking-wider ${getStatusStyles(booking.status)}`}>
-                        {booking.status}
-                      </span>
+                      <div className="relative inline-block">
+                        <select
+                          value={booking.status.toLowerCase()}
+                          onChange={(e) => onStatusChange(booking.id, e.target.value)}
+                          className={`pl-3 pr-7 py-1 rounded-md text-xs font-bold border uppercase tracking-wider cursor-pointer focus:outline-none focus:ring-1 transition-all appearance-none ${getStatusStyles(
+                            booking.status
+                          )}`}
+                        >
+                          <option value="confirmed">Confirmed</option>
+                          <option value="pending">Pending</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                        <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none text-[10px] opacity-70">
+                          ▼
+                        </div>
+                      </div>
                     </td>
+
                   </tr>
                 ))}
               </tbody>

@@ -6,54 +6,79 @@ import StatCards from './components/StatCards';
 import CalendlyEmbed from './components/CalendlyEmbed';
 
 export default function App() {
+  // Set up local React state using the JSON array as the baseline data source
   const [bookings, setBookings] = useState(initialBookings);
   const [filter, setFilter] = useState('All');
 
-  // 1. Filter logic
-  const filteredBookings = bookings.filter(booking => {
+  // Filter functionality
+  const filteredBookings = bookings.filter((booking) => {
     if (filter === 'All') return true;
     return booking.status.toLowerCase() === filter.toLowerCase();
   });
 
-  // 2. Add booking callback
+  // Callback function to insert a new booking directly into client state
   const handleAddBooking = (newBooking) => {
-    setBookings((prev) => [
-      ...prev,
-      { id: prev.length + 1, ...newBooking, status: 'pending' } // Default new bookings to pending
-    ]);
+    const nextId = bookings.length > 0 ? Math.max(...bookings.map((b) => b.id)) + 1 : 1;
+
+    const bookingWithStatus = {
+      id: nextId,
+      clientName: newBooking.clientName,
+      clientEmail: newBooking.clientEmail,
+      sessionType: newBooking.sessionType,
+      date: newBooking.date,
+      status: 'pending', // Requirements specify new entries default to pending status
+    };
+
+    // Update state to re-render components with the newly appended list row
+    setBookings([...bookings, bookingWithStatus]);
   };
 
+  const handleStatusChange = (bookingId, newStatus) => {
+  setBookings((prevBookings) =>
+    prevBookings.map((booking) =>
+      booking.id === bookingId ? { ...booking, status: newStatus.toLowerCase() } : booking
+    )
+  );
+};
+
   return (
-    <div className="min-h-screen  bg-gray-50 p-8 text-gray-900">
-      {/* Dashboard Header */}
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Studio Bookings Dashboard</h1>
-        <p className="text-gray-500">Manage client sessions, track booking status, and schedule new appointments.</p>
-      </header>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-900">
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* Dashboard Title & Meta Text */}
+        <header>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Studio Bookings Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1">Manage client sessions, track booking status, and schedule new appointments.</p>
+        </header>
 
-      {/* Stats Cards Row */}
-      <StatCards bookings={bookings} />
+        {/* Dynamic Statistic Top Cards */}
+        <StatCards bookings={bookings} />
 
-      {/* Main Grid Layout matching your UI */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-        {/* Left 2/3: List View & Filters */}
-        <div className="lg:col-span-2 space-y-6">
-          <BookingTable 
-            bookings={filteredBookings} 
-            activeFilter={filter} 
-            onFilterChange={setFilter} 
-          />
+        {/* Main Interface Columns Split Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          
+          {/* Main Bookings List & Filter View */}
+          <div className="lg:col-span-2">
+            <BookingTable 
+              bookings={filteredBookings} 
+              activeFilter={filter} 
+              onFilterChange={setFilter} 
+              onStatusChange={handleStatusChange}
+            />
+          </div>
+
+          {/* Form Action Component */}
+          <div className="lg:col-span-1">
+            <BookingForm onAddBooking={handleAddBooking} />
+          </div>
+          
         </div>
 
-        {/* Right 1/3: Add Booking Form */}
-        <div className="lg:col-span-1">
-          <BookingForm onAddBooking={handleAddBooking} />
+        {/* Isolated Calendly Segment (Bonus Section) */}
+        <div className="pt-4">
+          <CalendlyEmbed />
         </div>
-      </div>
 
-      {/* Bottom Section: Bonus Calendly Embed */}
-      <div className="mt-8">
-        <CalendlyEmbed />
       </div>
     </div>
   );
