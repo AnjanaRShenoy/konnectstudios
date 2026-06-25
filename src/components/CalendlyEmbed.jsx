@@ -71,7 +71,7 @@ export default function CalendlyEmbed() {
           <div 
             key={widgetKey}
             className="calendly-inline-widget w-full" 
-            data-url="https://calendly.com/shenoyanjana96"
+            data-url={import.meta.env.VITE_CALENDLY_URL}
             style={{ minWidth: '320px', height: '580px' }} 
           />
         </div>
